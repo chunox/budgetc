@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id_usuario    Int          @id @default(autoincrement())
+  nombre        String
+  email         String       @unique
+  password_hash String
+  created_at    DateTime     @default(now())
+  updated_at    DateTime     @updatedAt
+  categorias    Categoria[]
+  items         Item[]
+  presupuestos  Presupuesto[]
+  transacciones Transaccion[]
+}
+
+model Categoria {
+  id_categoria Int      @id @default(autoincrement())
+  nombre       String
+  tipo         String
+  id_usuario   Int?     
+  usuario      Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+  items        Item[]
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}
+
+model Item {
+  id_item          Int                 @id @default(autoincrement())
+  nombre           String
+  id_categoria     Int
+  categoria        Categoria           @relation(fields: [id_categoria], references: [id_categoria])
+  id_usuario       Int
+  usuario          Usuario             @relation(fields: [id_usuario], references: [id_usuario])
+  presupuestoItems PresupuestoItem[]
+  transacciones    TransaccionDetalle[]
+  precios          ItemPrecioHistorico[]
+  created_at       DateTime            @default(now())
+  updated_at       DateTime            @updatedAt
+}
+
+model Presupuesto {
+  id_presupuesto Int               @id @default(autoincrement())
+  nombre         String
+  fecha_inicio   DateTime
+  fecha_fin      DateTime
+  monto_total    Float
+  id_usuario     Int
+  usuario        Usuario           @relation(fields: [id_usuario], references: [id_usuario])
+  items          PresupuestoItem[]
+  transacciones  Transaccion[]
+  created_at     DateTime          @default(now())
+  updated_at     DateTime          @updatedAt
+}
+
+model PresupuestoItem {
+  id_presupuesto_item Int         @id @default(autoincrement())
+  id_presupuesto      Int
+  id_item             Int
+  monto_plan          Float
+  monto_actual        Float
+  cantidad_plan       Int
+  cantidad_real       Int
+  created_at          DateTime     @default(now())
+  updated_at          DateTime     @updatedAt
+  presupuesto         Presupuesto  @relation(fields: [id_presupuesto], references: [id_presupuesto])
+  item                Item         @relation(fields: [id_item], references: [id_item])
+}
+
+model Transaccion {
+  id_transaccion Int                   @id @default(autoincrement())
+  tipo           String
+  monto_total    Float
+  fecha          DateTime
+  descripcion    String
+  id_usuario     Int
+  id_presupuesto Int?
+  usuario        Usuario               @relation(fields: [id_usuario], references: [id_usuario])
+  presupuesto    Presupuesto?          @relation(fields: [id_presupuesto], references: [id_presupuesto])
+  detalles       TransaccionDetalle[]
+  created_at     DateTime              @default(now())
+  updated_at     DateTime              @updatedAt
+}
+
+model TransaccionDetalle {
+  id_detalle      Int          @id @default(autoincrement())
+  id_transaccion  Int
+  id_item         Int
+  cantidad        Int
+  precio_unitario Float
+  monto           Float
+  created_at      DateTime     @default(now())
+  transaccion     Transaccion  @relation(fields: [id_transaccion], references: [id_transaccion])
+  item            Item         @relation(fields: [id_item], references: [id_item])
+}
+
+model ItemPrecioHistorico {
+  id_precio     Int      @id @default(autoincrement())
+  id_item       Int
+  precio_unitario Float
+  fecha_inicio  DateTime
+  fecha_fin     DateTime?
+  created_at    DateTime @default(now())
+  item          Item     @relation(fields: [id_item], references: [id_item])
+}
